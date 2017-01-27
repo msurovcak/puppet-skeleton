@@ -1,0 +1,9 @@
+:backends:
+  - yaml
+:yaml:
+  :datadir: /etc/puppet/hieradata
+:logger: console
+:hierarchy:
+  - kitchen
+  - node/{%::fqdn}
+  - global

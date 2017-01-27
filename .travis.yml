@@ -1,0 +1,17 @@
+---
+sudo: required
+
+language: ruby
+
+services:
+  - docker
+
+bundler_args: --binstubs --jobs=3 --retry=3
+
+before_install:
+  - docker build -t surome/arch docker/arch/
+  - docker build -t surome/centos docker/centos/
+
+script:
+  - kitchen test
+  - make puppet-lint
