@@ -1,0 +1,44 @@
+driver:
+  name: docker
+  image: surome/clean
+
+provisioner:
+  name: puppet_apply
+  require_chef_for_busser: false
+  hiera_data_path: hieradata
+  hiera_data_remote_path: /etc/puppet/hieradata
+  hiera_config_path: hiera.yaml
+  puppet_config_path: puppet.conf
+  custom_options: "--confdir=/etc/puppet"
+
+platforms:
+  - name: centos-7.3
+    driver:
+      image: surome/centos
+  - name: arch
+    driver:
+      image: surome/arch
+
+verifier:
+  name: shell
+  remote_exec: true
+  upload_path: 
+  remote_upload_path: /etc/puppet/
+  root_path: /tmp/kitchen
+
+suites:
+  - name: web01.suro.me
+    provisioner:
+      custom_facts:
+        fqdn: 'web01.suro.me'
+        domain: 'suro.me'
+    verifier:
+      command: cd /tmp/kitchen/spec; bundle install --path .bundle; sudo RUBYLIB=. su root -c 'bundle exec rake spec:web01.suro.me tag=~skip_in_kitchen'
+
+  - name: app01.suro.me
+    provisioner:
+      custom_facts:
+        fqdn: 'app01.suro.me'
+        domain: 'suro.me'
+    verifier:
+      command: cd /tmp/kitchen/spec; bundle install --path .bundle; sudo RUBYLIB=. su root -c 'bundle exec rake spec:app01.suro.me tag=~skip_in_kitchen'

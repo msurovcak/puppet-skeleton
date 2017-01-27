@@ -1,0 +1,42 @@
+require 'rake'
+require 'rspec/core/rake_task'
+require 'yaml'
+
+task spec: 'spec:all'
+task default: :spec
+
+class ServerspecTask < RSpec::Core::RakeTask
+  attr_accessor :target
+  attr_accessor :labels
+
+  def run_task(verbose)
+    @rspec_opts = []
+    @rspec_opts += ['--format', ENV['format']] if ENV['format']
+    @rspec_opts += ['--tag', ENV['tag']] if ENV['tag']
+    super
+  end
+
+end
+
+namespace :spec do
+  h = YAML.load_file 'hosts.yaml'
+  hosts = h.keys
+
+  task all: hosts
+  task default: :all
+
+  hosts.each do |host|
+    desc "Run serverspec for #{host}"
+    roles = h[host] || []
+    roles << 'common'
+    rules = []
+    roles.each do |role|
+      rules.push "role/#{role}/*_spec.rb"
+    end
+    rules.push "host/#{host}/*_spec.rb"
+    rules.push 'shared/*_spec.rb'
+    ServerspecTask.new(host.to_sym) do |t|
+      t.pattern = rules.join(',')
+    end
+  end
+end
